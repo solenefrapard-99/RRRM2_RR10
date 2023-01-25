@@ -1,10 +1,12 @@
 ---
-title: "RRRM2_ISST_brain_ST_data_clustering_analysis"
+title: "RR3_brain_ST_data_clustering_analysis"
 output: html_document
 date: '2022-12-17'
 ---
 
+
 ## Loading packages, creating seurat object
+
 
 ```{r setup}
 #| message = FALSE
@@ -22,21 +24,25 @@ library(harmony)
 library(STutility)
 ```
 
+
 ### Set paths
+
 
 ```{r}
 # Set parent dir for visium experiments containing folders of spaceranger output with names
-visium.dir <- "/Users/solenefrapard/Documents/RRRM2_RR10_NASA_Project2/DataProcessing/RRRM2_RR10_test/RRRM2_ISST/Test1"
+visium.dir <- "/Users/solenefrapard/Documents/RRRM2_RR10_NASA_Project2/DataProcessing/RR3_test/rr3_data_ST"
 
 # Path for where the plots will be exported to
-export_path = "/Users/solenefrapard/Documents/RRRM2_RR10_NASA_Project2/DataProcessing/RRRM2_RR10_test/RRRM2_ISST/outs_test1"
+export_path = "/Users/solenefrapard/Documents/RRRM2_RR10_NASA_Project2/DataProcessing/RR3_test/r_analysis/"
 ```
+
 
 ### Create infoTable and create Seurat object
 
+
 ```{r}
 samples <- list.files(visium.dir, recursive = TRUE, full.names = TRUE, pattern = 'filtered_feature_bc_matrix.h5')
-spotfiles <- list.files(visium.dir, recursive = TRUE, full.names = TRUE, pattern = 'tissue_positions.csv')
+spotfiles <- list.files(visium.dir, recursive = TRUE, full.names = TRUE, pattern = 'tissue_positions_list.csv')
 imgs <- list.files(visium.dir, recursive = TRUE, full.names = TRUE, pattern = 'tissue_hires_image.png')
 json <- list.files(visium.dir, recursive = TRUE, full.names = TRUE, pattern = 'scalefactors_json.json')
 ```
@@ -51,6 +57,7 @@ section.name <- gsub(paste0(visium.dir, "/"),"", gsub("/filtered_feature_bc_matr
 infoTable <- data.frame(section.name, samples, spotfiles, imgs, json, stringsAsFactors = FALSE)
 ```
 
+
 # ```{r, include=FALSE}
 # se_brain <- InputFromTable(infotable = infoTable,
 #                      min.spot.feature.count = 100,
@@ -60,6 +67,7 @@ infoTable <- data.frame(section.name, samples, spotfiles, imgs, json, stringsAsF
 #                      platform =  "Visium")
 # ```
 
+
 ```{r include=FALSE}
 se_brain <- InputFromTable(infotable = infoTable,
                   minUMICountsPerGene = 100,
@@ -67,9 +75,11 @@ se_brain <- InputFromTable(infotable = infoTable,
 ```
 
 
+
 # Data Quality Control
 
 ## Number of Genes per Spot
+
 
 ```{r}
 VlnPlot(se_brain, features = "nFeature_RNA", ncol = 1, group.by = "section.name", pt.size = 0)
@@ -80,7 +90,9 @@ ST.FeaturePlot(se_brain, features = "nFeature_RNA", dark.theme = F, cols = c("li
 
 ```
 
+
 ## Number of UMIs per Spot
+
 
 ```{r}
 VlnPlot(se_brain, features = "nCount_RNA", ncol = 1, group.by = "section.name", pt.size = 0)
@@ -91,7 +103,9 @@ ST.FeaturePlot(se_brain, features = "nCount_RNA", dark.theme = F, cols = c("ligh
 
 ```
 
+
 ### VlnPlot - UMI/Genes/mtGenes/RiboGenes
+
 
 ```{r, fig.height=10, fig.width= 8}
 
@@ -100,7 +114,9 @@ se_brain$percent.ribo <- PercentageFeatureSet(se_brain, pattern = "^Rpl|^Rps")
 VlnPlot(se_brain, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"), ncol = 2, pt.size = 0)
 ```
 
+
 ## Filtering step
+
 
 ```{r 4}
 
@@ -114,7 +130,9 @@ rownames(enids) <- enids$gene_id
 se_brain <- SubsetSTData(se_brain, expression = nFeature_RNA > 200)
 ```
 
+
 ### mitochondrial, ribosomal genes and Malat1 filtered out
+
 
 ```{r}
 
@@ -135,7 +153,9 @@ se_filtered$percent.ribo <- PercentageFeatureSet(se_filtered, pattern = "^Rpl|^R
 VlnPlot(se_filtered, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"), ncol = 2, pt.size = 0)
 ```
 
+
 ### export Staffli object
+
 
 ```{r}
 staffli <- se_filtered@tools$Staffli
@@ -163,14 +183,18 @@ VariableFeatures(se_brain_merged) <- features
 
 ```
 
+
 ## PCA + Harmony
+
 
 ```{r}
 se_brain_merged <- RunPCA(se_brain_merged)
 se_merged_harmony <- RunHarmony(se_brain_merged, group.by.vars = "section.name", reduction = "pca", assay.use = "SCT")
 ```
 
+
 ## Clustering
+
 
 ```{r}
 se_merged_harmony <- FindNeighbors(se_merged_harmony, reduction = "harmony", dims = 1:35)
@@ -217,3 +241,4 @@ d2 <- DotPlot(se_merged_harmony, features = unique(top5_2$gene) %>% rev()) +
 
 d2
 ```
+
