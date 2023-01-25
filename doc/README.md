@@ -1,5 +1,5 @@
 # Contents of doc folder
-SF
+SF cette fois c'est bon
 This folder should contain the main scientific product of the project
 as well as all other files related to it (e.g. co-author comments,
 versions, images, etc). It may and likely should also contain
