@@ -1,7 +1,7 @@
 ---
-title: "RRRM2_ISST_brain_ST_data_clustering_analysis"
+title: "RRRM2_ISST_test2_brain_ST_data_clustering_analysis"
 output: pdf
-date: '2023-01-25'
+date: '2023-01-26'
 ---
 
 ## Loading packages, creating seurat object
@@ -29,10 +29,10 @@ library(STutility)
 ```{r}
 #| output: false
 # Set parent dir for visium experiments containing folders of spaceranger output with names
-visium.dir <- "/Users/solenefrapard/Documents/RRRM2_RR10_NASA_Project2/DataProcessing/RRRM2_RR10_test/RRRM2_ISST/Test1"
+visium.dir <- "/Users/solenefrapard/Documents/RRRM2_RR10_NASA_Project2/DataProcessing/RRRM2_RR10_test/RRRM2_ISST/Test2"
 
 # Path for where the plots will be exported to
-export_path = "/Users/solenefrapard/Documents/RRRM2_RR10_NASA_Project2/DataProcessing/RRRM2_RR10_test/RRRM2_ISST/outs_test1"
+export_path = "/Users/solenefrapard/Documents/RRRM2_RR10_NASA_Project2/DataProcessing/RRRM2_RR10_test/RRRM2_ISST/outs_test2"
 ```
 
 ### Create infoTable and create Seurat object
