@@ -1,14 +1,13 @@
 ---
 title: "RRRM2_ISST_test2_brain_ST_data_clustering_analysis"
-output: pdf
+output: html_document
 date: '2023-01-26'
 ---
 
 ## Loading packages, creating seurat object
 
 ```{r setup}
-#| message = FALSE
-#| output: false
+#| message: false
 
 library(Matrix)
 library(magrittr)
@@ -27,7 +26,6 @@ library(STutility)
 ### Set paths
 
 ```{r}
-#| output: false
 # Set parent dir for visium experiments containing folders of spaceranger output with names
 visium.dir <- "/Users/solenefrapard/Documents/RRRM2_RR10_NASA_Project2/DataProcessing/RRRM2_RR10_test/RRRM2_ISST/Test2"
 
@@ -38,7 +36,6 @@ export_path = "/Users/solenefrapard/Documents/RRRM2_RR10_NASA_Project2/DataProce
 ### Create infoTable and create Seurat object
 
 ```{r}
-#| output: false
 samples <- list.files(visium.dir, recursive = TRUE, full.names = TRUE, pattern = 'filtered_feature_bc_matrix.h5')
 spotfiles <- list.files(visium.dir, recursive = TRUE, full.names = TRUE, pattern = 'tissue_positions.csv')
 imgs <- list.files(visium.dir, recursive = TRUE, full.names = TRUE, pattern = 'tissue_hires_image.png')
@@ -46,14 +43,12 @@ json <- list.files(visium.dir, recursive = TRUE, full.names = TRUE, pattern = 's
 ```
 
 ```{r}
-#| output: false
 section.name <- samples
 section.name <- gsub(paste0(visium.dir, "/"),"", gsub("/filtered_feature_bc_matrix.h5","",section.name))
 
 ```
 
 ```{r}
-#| output: false
 infoTable <- data.frame(section.name, samples, spotfiles, imgs, json, stringsAsFactors = FALSE)
 ```
 
@@ -79,12 +74,10 @@ se_brain <- InputFromTable(infotable = infoTable,
 ## Number of Genes per Spot
 
 ```{r}
-#| output: false
 VlnPlot(se_brain, features = "nFeature_RNA", ncol = 1, group.by = "section.name", pt.size = 0)
 ```
 
 ```{r, fig.height= 10,fig.width= 10}
-#| output: false
 ST.FeaturePlot(se_brain, features = "nFeature_RNA", dark.theme = F, cols = c("lightyellow", "red", "dark red"), pt.size = 1.2, ncol = 4)
 
 ```
@@ -92,12 +85,10 @@ ST.FeaturePlot(se_brain, features = "nFeature_RNA", dark.theme = F, cols = c("li
 ## Number of UMIs per Spot
 
 ```{r}
-#| output: false
 VlnPlot(se_brain, features = "nCount_RNA", ncol = 1, group.by = "section.name", pt.size = 0)
 ```
 
 ```{r, fig.height= 10,fig.width= 10}
-#| output: false
 ST.FeaturePlot(se_brain, features = "nCount_RNA", dark.theme = F, cols = c("lightyellow", "red", "dark red"), pt.size = 1.2, ncol = 4)
 
 ```
@@ -105,7 +96,6 @@ ST.FeaturePlot(se_brain, features = "nCount_RNA", dark.theme = F, cols = c("ligh
 ### VlnPlot - UMI/Genes/mtGenes/RiboGenes
 
 ```{r, fig.height=10, fig.width= 8}
-#| output: false
 se_brain$percent.mt <- PercentageFeatureSet(se_brain, pattern = "^mt")
 se_brain$percent.ribo <- PercentageFeatureSet(se_brain, pattern = "^Rpl|^Rps")
 VlnPlot(se_brain, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"), ncol = 2, pt.size = 0)
@@ -114,7 +104,6 @@ VlnPlot(se_brain, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "perc
 ## Filtering step
 
 ```{r 4}
-#| output: false
 enids <- read.table(file = "/Users/solenefrapard/Documents/RRRM2_RR10_NASA_Project2/DataProcessing/RR3_test/rr3_ref/mm10_genes.tsv", header = T, stringsAsFactors = T)
 enids <- data.frame(apply(enids, 2, as.character), stringsAsFactors = F)
 rownames(enids) <- enids$gene_id
@@ -122,14 +111,12 @@ rownames(enids) <- enids$gene_id
 ```
 
 ```{r}
-#| output: false
 se_brain <- SubsetSTData(se_brain, expression = nFeature_RNA > 200)
 ```
 
 ### mitochondrial, ribosomal genes and Malat1 filtered out
 
 ```{r}
-#| output: false
 enids <- subset(enids, gene_biotype %in% c("protein_coding", "lncRNA"))
 keep.genes <- intersect(rownames(se_brain), enids$gene_name)
 se_brain <- se_brain[keep.genes, ]
@@ -142,7 +129,6 @@ se_filtered <- se_brain[keep.genes, ]
 ```
 
 ```{r, fig.height=10, fig.width= 8}
-#| output: false
 se_filtered$percent.mt <- PercentageFeatureSet(se_filtered, pattern = "^mt")
 se_filtered$percent.ribo <- PercentageFeatureSet(se_filtered, pattern = "^Rpl|^Rps")
 VlnPlot(se_filtered, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"), ncol = 2, pt.size = 0)
@@ -151,13 +137,11 @@ VlnPlot(se_filtered, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "p
 ### export Staffli object
 
 ```{r}
-#| output: false
 staffli <- se_filtered@tools$Staffli
 
 ```
 
 ```{r}
-#| output: false
 # split the dataset into a list of objects -> one pre section
 se_section_list <- SplitObject(se_filtered, split.by = "section.name")
 
@@ -190,14 +174,12 @@ se_merged_harmony <- RunHarmony(se_brain_merged, group.by.vars = "section.name",
 ## Clustering
 
 ```{r}
-#| output: false
 se_merged_harmony <- FindNeighbors(se_merged_harmony, reduction = "harmony", dims = 1:35)
 se_merged_harmony <- FindClusters(se_merged_harmony, resolution = 0.5)
 se_merged_harmony <- RunUMAP(se_merged_harmony, dims = 1:35, reduction = "harmony")
 ```
 
 ```{r}
-#| output: false
 p7 <- DimPlot(se_merged_harmony, group.by = "section.name")
 p8 <- DimPlot(se_merged_harmony)
 
@@ -212,23 +194,19 @@ DimPlot(se_merged_harmony, cols = coldef)
 ```
 
 ```{r}
-#| output: false
 se_merged_harmony@tools$Staffli <- staffli
 ```
 
 ```{r, fig.height= 22, fig.width= 24}
-#| output: false
 ST.FeaturePlot(se_merged_harmony, features = "seurat_clusters", dark.theme = F, pt.size = 2.3, show.sb = F, ncol = 4, cols = coldef)
 ```
 
 ```{r}
-#| output: false
 markers_RR3 <- FindAllMarkers(se_merged_harmony, assay = "RNA",
                            only.pos = T)
 ```
 
 ```{r, fig.width=10, fig.height= 18}
-#| output: false
 #top5_2 <- markers_RR3_2 %>%
 top5_2 <- markers_RR3 %>%
   group_by(cluster) %>%
