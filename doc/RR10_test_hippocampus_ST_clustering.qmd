@@ -27,10 +27,10 @@ library(STutility)
 
 ```{r}
 # Set parent dir for visium experiments containing folders of spaceranger output with names
-visium.dir <- "/Users/solenefrapard/Documents/RRRM2_RR10_NASA_Project2/DataProcessing/RRRM2_RR10_test/RRRM2_ISST/Test2"
+visium.dir <- "/Users/solenefrapard/Documents/RRRM2_RR10_NASA_Project2/DataProcessing/RRRM2_RR10_test/RR-10/Hippocampus"
 
 # Path for where the plots will be exported to
-export_path = "/Users/solenefrapard/Documents/RRRM2_RR10_NASA_Project2/DataProcessing/RRRM2_RR10_test/RRRM2_ISST/outs_test2"
+export_path = "/Users/solenefrapard/Documents/RRRM2_RR10_NASA_Project2/DataProcessing/RRRM2_RR10_test/RR-10/out_hippo"
 ```
 
 ### Create infoTable and create Seurat object
