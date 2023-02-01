@@ -32,7 +32,7 @@ visium.dir <- "/Users/solenefrapard/Documents/RRRM2_RR10_NASA_Project2/DataProce
 # Path for where the plots will be exported to
 export_path = "/Users/solenefrapard/Documents/RRRM2_RR10_NASA_Project2/DataProcessing/RRRM2_RR10_test/RR-10/out_cereb"
 ```
-
+ 
 ### Create infoTable and create Seurat object
 
 ```{r}

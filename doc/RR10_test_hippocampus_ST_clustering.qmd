@@ -52,14 +52,7 @@ section.name <- gsub(paste0(visium.dir, "/"),"", gsub("/filtered_feature_bc_matr
 infoTable <- data.frame(section.name, samples, spotfiles, imgs, json, stringsAsFactors = FALSE)
 ```
 
-# ```{r, include=FALSE}
-# se_brain <- InputFromTable(infotable = infoTable,
-#                      min.spot.feature.count = 100,
-#                      min.gene.count = 100, 
-#                      min.gene.spots = 10,
-#                      min.spot.count = 100,
-#                      platform =  "Visium")
-# ```
+# `{r, include=FALSE} # se_brain <- InputFromTable(infotable = infoTable, #                      min.spot.feature.count = 100, #                      min.gene.count = 100,  #                      min.gene.spots = 10, #                      min.spot.count = 100, #                      platform =  "Visium") #`
 
 ```{r include=FALSE}
 #| output: false
@@ -67,7 +60,6 @@ se_brain <- InputFromTable(infotable = infoTable,
                   minUMICountsPerGene = 100,
                   platform =  "Visium")
 ```
-
 
 # Data Quality Control
 
