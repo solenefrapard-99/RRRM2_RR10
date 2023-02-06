@@ -1,0 +1,8 @@
+---
+title: "Practice RR-10 Flight Hippocampus"
+author: "Solène Frapard"
+format: html
+---
+
+#Pre-processing of the RR-10 samples: focus on FL hippocampus samples
+
