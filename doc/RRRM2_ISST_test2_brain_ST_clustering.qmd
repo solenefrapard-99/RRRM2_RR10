@@ -73,6 +73,7 @@ se_brain <- InputFromTable(infotable = infoTable,
 
 ## Number of Genes per Spot
 
+
 ```{r}
 VlnPlot(se_brain, features = "nFeature_RNA", ncol = 1, group.by = "section.name", pt.size = 0)
 ```

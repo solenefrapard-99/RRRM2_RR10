@@ -1,8 +1,131 @@
 ---
 title: "Practice RR-10 Flight Hippocampus"
 author: "Solène Frapard"
+echo: false
+message: false
 format: html
 ---
 
 #Pre-processing of the RR-10 samples: focus on FL hippocampus samples
 
+```{r setup}
+#| include: false
+library(Matrix)
+library(magrittr)
+library(dplyr)
+library(ggplot2)
+library(Seurat)
+library(patchwork)
+library(Rcpp)
+library(pheatmap)
+library(RColorBrewer)
+library(clustree)
+library(harmony)
+library(STutility)
+
+```
+
+### Set paths
+
+```{r}
+# Set parent dir for visium experiments containing folders of spaceranger output with names
+visium.dir <- "/Users/solenefrapard/Documents/RRRM2_RR10_NASA_Project2/DataProcessing/RRRM2_RR10_test/RR-10/FL_Hippo"
+
+# Path for where the plots will be exported to
+export_path = "/Users/solenefrapard/Documents/RRRM2_RR10_NASA_Project2/DataProcessing/RRRM2_RR10_test/RR-10/out_hippo"
+```
+
+### Create infoTable and create Seurat object
+
+```{r}
+samples <- list.files(visium.dir, recursive = TRUE, full.names = TRUE, pattern = 'filtered_feature_bc_matrix.h5')
+spotfiles <- list.files(visium.dir, recursive = TRUE, full.names = TRUE, pattern = 'tissue_positions.csv')
+imgs <- list.files(visium.dir, recursive = TRUE, full.names = TRUE, pattern = 'tissue_hires_image.png')
+json <- list.files(visium.dir, recursive = TRUE, full.names = TRUE, pattern = 'scalefactors_json.json')
+```
+
+```{r}
+section.name <- samples
+section.name <- gsub(paste0(visium.dir, "/"),"", gsub("/filtered_feature_bc_matrix.h5","",section.name))
+
+```
+
+```{r}
+infoTable <- data.frame(section.name, samples, spotfiles, imgs, json, stringsAsFactors = FALSE)
+```
+
+```{r}
+se_brain <- InputFromTable(infotable = infoTable,
+                    minUMICountsPerGene = 100,
+                    platform =  "Visium")
+```
+
+# Data Quality Control
+
+We can try to plot different features, for example, the number of genes per spot for the filtered data.
+
+## Number of Genes per Spot
+
+The Vln function allow use to draws a violin plot of single cell data.
+
+```{r}
+VlnPlot(se_brain, features = "nFeature_RNA", ncol = 1, group.by = "section.name", pt.size = 0)
+```
+To explore the spatial distribution of various features on the array coordinates we can do this using the ST.FeaturePlot() function. Features include any column stored in the “meta.data” slot, dimensionality reduction objects or gene expression vectors.
+
+```{r, fig.height= 10,fig.width= 10}
+ST.FeaturePlot(se_brain,features = c("nFeature_RNA"), cols = c("lightgray", "mistyrose", "red", "darkred", "black"), ncol = 2, pt.size = 1.4)
+
+```
+### VlnPlot - UMI/Genes/mtGenes/RiboGenes
+
+Now, let's plot some other features. We want to evaluate the percentage of ribosomal and mitochondrial genes in order to filter them out.
+
+```{r, fig.height=10, fig.width= 8}
+se_brain$percent.mt <- PercentageFeatureSet(se_brain, pattern = "^mt")
+se_brain$percent.ribo <- PercentageFeatureSet(se_brain, pattern = "^Rpl|^Rps")
+VlnPlot(se_brain, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"), ncol = 2, pt.size = 0)
+```
+## Filtering step
+
+We import the reference mouse genome. 
+apply() takes Data frame or matrix as an input and gives output in vector, list or array. Apply function in R is primarily used to avoid explicit uses of loop constructs. It is the most basic of all collections can be used over a matrix.--> Can allow use for example to calculate a mean on all the row of a data frame but not the columns.
+character() function in R converts a numeric object to a string data type or a character object.  So I think that apply(enids, 2, as.character) is converting the column of the reference mouse genome dataframe in string.
+```{r 4}
+enids <- read.table(file = "/Users/solenefrapard/Documents/RRRM2_RR10_NASA_Project2/DataProcessing/RR3_test/rr3_ref/mm10_genes.tsv", header = T, stringsAsFactors = T)
+enids <- data.frame(apply(enids, 2, as.character), stringsAsFactors = F)
+rownames(enids) <- enids$gene_id
+
+```
+
+```{r}
+se_brain <- SubsetSTData(se_brain, expression = nFeature_RNA > 200)
+```
+
+### mitochondrial, ribosomal genes and Malat1 filtered out
+
+Why did they wanted to filter the Malat1 out as well?
+```{r}
+enids <- subset(enids, gene_biotype %in% c("protein_coding", "lncRNA"))
+keep.genes <- intersect(rownames(se_brain), enids$gene_name)
+se_brain <- se_brain[keep.genes, ]
+
+genes.brain <- grep(pattern = c("^mt-|^Rpl|^Rps|Malat1"), x = rownames(se_brain), value = T)
+keep.genes <- setdiff(rownames(se_brain), genes.brain)
+se_filtered <- se_brain[keep.genes, ]
+
+
+```
+
+```{r, fig.height=10, fig.width= 8}
+se_filtered$percent.mt <- PercentageFeatureSet(se_filtered, pattern = "^mt")
+se_filtered$percent.ribo <- PercentageFeatureSet(se_filtered, pattern = "^Rpl|^Rps")
+VlnPlot(se_filtered, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"), ncol = 2, pt.size = 0)
+```
+
+
+```{r}
+
+
+
+```

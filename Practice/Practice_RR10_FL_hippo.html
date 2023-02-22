@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.2.269">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Solène Frapard">
+
+<title>Practice RR-10 Flight Hippocampus</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1.6em;
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="Practice_RR10_FL_hippo_files/libs/clipboard/clipboard.min.js"></script>
+<script src="Practice_RR10_FL_hippo_files/libs/quarto-html/quarto.js"></script>
+<script src="Practice_RR10_FL_hippo_files/libs/quarto-html/popper.min.js"></script>
+<script src="Practice_RR10_FL_hippo_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="Practice_RR10_FL_hippo_files/libs/quarto-html/anchor.min.js"></script>
+<link href="Practice_RR10_FL_hippo_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="Practice_RR10_FL_hippo_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="Practice_RR10_FL_hippo_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="Practice_RR10_FL_hippo_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="Practice_RR10_FL_hippo_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="fullcontent">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Practice RR-10 Flight Hippocampus</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Solène Frapard </p>
+          </div>
+  </div>
+    
+  
+    
+  </div>
+  
+
+</header>
+
+<p>#Pre-processing of the RR-10 samples: focus on FL hippocampus samples</p>
+<section id="set-paths" class="level3">
+<h3 class="anchored" data-anchor-id="set-paths">Set paths</h3>
+<div class="cell">
+
+</div>
+</section>
+<section id="create-infotable-and-create-seurat-object" class="level3">
+<h3 class="anchored" data-anchor-id="create-infotable-and-create-seurat-object">Create infoTable and create Seurat object</h3>
+<div class="cell">
+
+</div>
+<div class="cell">
+
+</div>
+<div class="cell">
+
+</div>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>Using spotfiles to remove spots outside of tissue
+Loading /Users/solenefrapard/Documents/RRRM2_RR10_NASA_Project2/DataProcessing/RRRM2_RR10_test/RR-10/FL_Hippo/FL1_H/filtered_feature_bc_matrix.h5 count matrix from a 'Visium' experiment
+Loading /Users/solenefrapard/Documents/RRRM2_RR10_NASA_Project2/DataProcessing/RRRM2_RR10_test/RR-10/FL_Hippo/FL3_H/filtered_feature_bc_matrix.h5 count matrix from a 'Visium' experiment
+Loading /Users/solenefrapard/Documents/RRRM2_RR10_NASA_Project2/DataProcessing/RRRM2_RR10_test/RR-10/FL_Hippo/FL5_H/filtered_feature_bc_matrix.h5 count matrix from a 'Visium' experiment
+Loading /Users/solenefrapard/Documents/RRRM2_RR10_NASA_Project2/DataProcessing/RRRM2_RR10_test/RR-10/FL_Hippo/FL7_H/filtered_feature_bc_matrix.h5 count matrix from a 'Visium' experiment
+Loading /Users/solenefrapard/Documents/RRRM2_RR10_NASA_Project2/DataProcessing/RRRM2_RR10_test/RR-10/FL_Hippo/FL9_H/filtered_feature_bc_matrix.h5 count matrix from a 'Visium' experiment
+
+------------- Filtering (not including images based filtering) -------------- 
+  Spots removed:  2  
+  Genes removed:  17777  
+Saving capture area ranges to Staffli object 
+After filtering the dimensions of the experiment is: [14508 genes, 14081 spots] </code></pre>
+</div>
+</div>
+</section>
+<section id="data-quality-control" class="level1">
+<h1>Data Quality Control</h1>
+<p>We can try to plot different features, for example, the number of genes per spot for the filtered data.</p>
+<section id="number-of-genes-per-spot" class="level2">
+<h2 class="anchored" data-anchor-id="number-of-genes-per-spot">Number of Genes per Spot</h2>
+<p>The Vln function allow use to draws a violin plot of single cell data.</p>
+<div class="cell">
+<div class="cell-output-display">
+<p><img src="Practice_RR10_FL_hippo_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>To explore the spatial distribution of various features on the array coordinates we can do this using the ST.FeaturePlot() function. Features include any column stored in the “meta.data” slot, dimensionality reduction objects or gene expression vectors.</p>
+<div class="cell">
+<div class="cell-output-display">
+<p><img src="Practice_RR10_FL_hippo_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid" width="960"></p>
+</div>
+</div>
+<section id="vlnplot---umigenesmtgenesribogenes" class="level3">
+<h3 class="anchored" data-anchor-id="vlnplot---umigenesmtgenesribogenes">VlnPlot - UMI/Genes/mtGenes/RiboGenes</h3>
+<p>Now, let’s plot some other features. We want to evaluate the percentage of ribosomal and mitochondrial genes in order to filter them out.</p>
+<div class="cell">
+<div class="cell-output-display">
+<p><img src="Practice_RR10_FL_hippo_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid" width="768"></p>
+</div>
+</div>
+</section>
+</section>
+<section id="filtering-step" class="level2">
+<h2 class="anchored" data-anchor-id="filtering-step">Filtering step</h2>
+<p>We import the reference mouse genome. apply() takes Data frame or matrix as an input and gives output in vector, list or array. Apply function in R is primarily used to avoid explicit uses of loop constructs. It is the most basic of all collections can be used over a matrix.–&gt; Can allow use for example to calculate a mean on all the row of a data frame but not the columns. character() function in R converts a numeric object to a string data type or a character object. So I think that apply(enids, 2, as.character) is converting the column of the reference mouse genome dataframe in string.</p>
+<div class="cell">
+
+</div>
+<div class="cell">
+
+</div>
+<section id="mitochondrial-ribosomal-genes-and-malat1-filtered-out" class="level3">
+<h3 class="anchored" data-anchor-id="mitochondrial-ribosomal-genes-and-malat1-filtered-out">mitochondrial, ribosomal genes and Malat1 filtered out</h3>
+<p>Why did they wanted to filter the Malat1 out as well?</p>
+<div class="cell">
+
+</div>
+<div class="cell">
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning in SingleExIPlot(type = type, data = data[, x, drop = FALSE], idents =
+idents, : All cells have the same value of percent.mt.</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning in SingleExIPlot(type = type, data = data[, x, drop = FALSE], idents =
+idents, : All cells have the same value of percent.ribo.</code></pre>
+</div>
+<div class="cell-output-display">
+<p><img src="Practice_RR10_FL_hippo_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid" width="768"></p>
+</div>
+</div>
+<div class="cell">
+
+</div>
+</section>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>
