@@ -41,7 +41,7 @@ visium.dir <- "/Users/solenefrapard/Documents/RRRM2_RR10_NASA_Project2/DataProce
 # Path for where the plots will be exported to
 export_path = "/Users/solenefrapard/Documents/RRRM2_RR10_NASA_Project2/DataProcessing/RRRM2_RR10_test/RR-10/out_cereb"
 ```
- 
+
 ### Create infoTable and create Seurat object
 
 ```{r}
@@ -67,7 +67,6 @@ se_brain <- InputFromTable(infotable = infoTable,
                   minUMICountsPerGene = 100,
                   platform =  "Visium")
 ```
-
 
 # Data Quality Control
 
@@ -101,8 +100,8 @@ se_brain$percent.ribo <- PercentageFeatureSet(se_brain, pattern = "^Rpl|^Rps")
 VlnPlot(se_brain, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"), ncol = 2, pt.size = 0)
 ```
 
+Run PCA here on the non-filtered data and then plot it
 
-Run PCA here on the non-filtered data and then plot it 
 ```{r}
 #| message: false
 #| echo: false
@@ -137,6 +136,7 @@ VariableFeatures(se_brain_merged_notfilt) <- features
 #| echo: false
 #| include: false
 se_brain_merged_notfilt <- RunPCA(se_brain_merged_notfilt)
+se_brain_merged_notfilt <- RunUMAP(se_brain_merged_notfilt, dims = 1:35, reduction = "pca")
 ```
 
 ```{r}
@@ -225,7 +225,7 @@ VariableFeatures(se_brain_merged) <- features
 
 ```
 
-Plot data before and after harmony 
+Plot data before and after harmony
 
 ## PCA + Harmony
 
@@ -234,6 +234,7 @@ Plot data before and after harmony
 ```{r}
 #| output: false
 se_brain_merged <- RunPCA(se_brain_merged)
+se_brain_merged <- RunUMAP(se_brain_merged, dims = 1:35, reduction = "pca")
 ```
 
 ```{r}
@@ -250,7 +251,7 @@ coldef <- c("#004A55","#0000FF", "#0031D4", "#00CBD4", "#006A21", "#799400","#FF
 DimPlot(se_brain_merged, cols = coldef)
 ```
 
-### Harmony 
+### Harmony
 
 ```{r}
 #| message: false
