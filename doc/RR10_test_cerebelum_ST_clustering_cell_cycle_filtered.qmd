@@ -86,6 +86,13 @@ ST.FeaturePlot(se_brain, features = "nFeature_RNA", dark.theme = F, cols = c("li
 ```{r}
 VlnPlot(se_brain, features = "nCount_RNA", ncol = 1, group.by = "section.name", pt.size = 0)
 ```
+```{r}
+#Plotting nCount_RNA vs mFeature_RNA to see how they correlate over the whole dataset. Good spots will have good ratio for both these parameters
+
+FeatureScatter(se_brain, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+```
+
+
 
 ```{r, fig.height= 10,fig.width= 10}
 ST.FeaturePlot(se_brain, features = "nCount_RNA", dark.theme = F, cols = c("lightyellow", "red", "dark red"), pt.size = 1.2, ncol = 4)
@@ -235,6 +242,18 @@ Plot data before and after harmony
 #| output: false
 se_brain_merged <- RunPCA(se_brain_merged)
 se_brain_merged <- RunUMAP(se_brain_merged, dims = 1:35, reduction = "pca")
+```
+
+```{r}
+#DimHeatmap() allows for easy exploration of the primary sources of heterogeneity in a dataset, and can be useful when trying to decide which PCs to include for further downstream analyses. 
+
+DimHeatmap(se_brain_merged, dims = 1:10, cells = 500, balanced = TRUE)
+```
+
+```{r}
+#ranking of principle components based on the percentage of variance explained by each one
+
+ElbowPlot(se_brain_merged)
 ```
 
 ```{r}

@@ -1,0 +1,345 @@
+---
+title: "RRRM2_ISST_test_hippo_ST_data_clustering_analysis"
+output: html_document
+format: 
+  html:
+    code-fold: true
+    toc: true
+    number-sections: true
+    theme: spacelab
+    embed-resources: true
+date: '2023-03-10'
+---
+
+
+## Loading packages, creating seurat object
+
+
+```{r setup}
+#| message: false
+#| echo: false
+#| include: false
+
+library(Matrix)
+library(magrittr)
+library(dplyr)
+library(ggplot2)
+library(Seurat)
+library(patchwork)
+library(Rcpp)
+library(pheatmap)
+library(RColorBrewer)
+library(clustree)
+library(harmony)
+library(STutility)
+```
+
+
+### Set paths
+
+
+```{r}
+# Set parent dir for visium experiments containing folders of spaceranger output with names
+visium.dir <- "/Users/solenefrapard/Documents/RRRM2_RR10_NASA_Project2/DataProcessing/RRRM2_RR10_test/RRRM2_ISST/Cerebellum"
+
+# Path for where the plots will be exported to
+export_path = "/Users/solenefrapard/Documents/RRRM2_RR10_NASA_Project2/DataProcessing/RRRM2_RR10_test/RRRM2_ISST"
+```
+
+
+### Create infoTable and create Seurat object
+
+
+```{r}
+samples <- list.files(visium.dir, recursive = TRUE, full.names = TRUE, pattern = 'filtered_feature_bc_matrix.h5')
+spotfiles <- list.files(visium.dir, recursive = TRUE, full.names = TRUE, pattern = 'tissue_positions.csv')
+imgs <- list.files(visium.dir, recursive = TRUE, full.names = TRUE, pattern = 'tissue_hires_image.png')
+json <- list.files(visium.dir, recursive = TRUE, full.names = TRUE, pattern = 'scalefactors_json.json')
+```
+
+```{r}
+section.name <- samples
+section.name <- gsub(paste0(visium.dir, "/"),"", gsub("/filtered_feature_bc_matrix.h5","",section.name))
+
+```
+
+```{r}
+infoTable <- data.frame(section.name, samples, spotfiles, imgs, json, stringsAsFactors = FALSE)
+```
+
+```{r include=FALSE}
+#| output: false
+se_brain <- InputFromTable(infotable = infoTable,
+                  minUMICountsPerGene = 100,
+                  platform =  "Visium")
+```
+
+
+# Data Quality Control
+
+## Number of Genes per Spot
+
+
+```{r}
+VlnPlot(se_brain, features = "nFeature_RNA", ncol = 1, group.by = "section.name", pt.size = 0)
+```
+
+```{r, fig.height= 10,fig.width= 10}
+ST.FeaturePlot(se_brain, features = "nFeature_RNA", dark.theme = F, cols = c("lightyellow", "red", "dark red"), pt.size = 1.2, ncol = 4)
+
+```
+
+
+## Number of UMIs per Spot
+
+
+```{r}
+VlnPlot(se_brain, features = "nCount_RNA", ncol = 1, group.by = "section.name", pt.size = 0)
+```
+
+```{r, fig.height= 10,fig.width= 10}
+ST.FeaturePlot(se_brain, features = "nCount_RNA", dark.theme = F, cols = c("lightyellow", "red", "dark red"), pt.size = 1.2, ncol = 4)
+
+```
+
+
+### VlnPlot - UMI/Genes/mtGenes/RiboGenes
+
+
+```{r, fig.height=10, fig.width= 8}
+se_brain$percent.mt <- PercentageFeatureSet(se_brain, pattern = "^mt")
+se_brain$percent.ribo <- PercentageFeatureSet(se_brain, pattern = "^Rpl|^Rps")
+VlnPlot(se_brain, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"), ncol = 2, pt.size = 0)
+```
+
+
+Run PCA here on the non-filtered data and then plot it
+
+
+```{r}
+#| message: false
+#| echo: false
+#| include: false
+# split the dataset into a list of objects -> one pre section
+se_section_list_notfilt <- SplitObject(se_brain, split.by = "section.name")
+
+
+# normalize and identify variable features for each dataset independently
+se_section_list_notfilt<- lapply(se_section_list_notfilt, SCTransform)
+
+
+# select features for integration
+features <- SelectIntegrationFeatures(object.list = se_section_list_notfilt, nfeatures = 3000)
+
+se_section_list_notfilt <- PrepSCTIntegration(object.list = se_section_list_notfilt, anchor.features = features)
+```
+
+
+## Ploting of the non-filtered data
+
+
+```{r}
+#| message: false
+#| echo: false
+#| include: false
+se_brain_merged_notfilt <- merge(se_section_list_notfilt[[1]], y = c(se_section_list_notfilt[2:length(se_section_list_notfilt)]), merge.data = T)
+VariableFeatures(se_brain_merged_notfilt) <- features
+
+```
+
+```{r}
+#| message: false
+#| echo: false
+#| include: false
+se_brain_merged_notfilt <- RunPCA(se_brain_merged_notfilt)
+se_brain_merged_notfilt <- RunUMAP(se_brain_merged_notfilt, dims = 1:35, reduction = "pca")
+```
+
+```{r}
+p1 <- DimPlot(se_brain_merged_notfilt, group.by = "section.name")+ ggtitle("Plot of the non-filtered data")
+p2 <- DimPlot(se_brain_merged_notfilt)
+
+p1|p2
+```
+
+```{r}
+#| output: false
+coldef <- c("#004A55","#0000FF", "#0031D4", "#00CBD4", "#006A21", "#799400","#FFD66A", "#D4C200", "#D6E279","#D4D6FF", "#D3AAFF", "#7500BF","#AA0084", "#FF9A94", "#FF8861","#D43938", "#946E55", "#7F1100", "#9B9A9A","#88CCEE","#CC6677", "#DDCC77", "#117733", "#332288", "#AA4499", "#44AA99", "#999933", "#882255", "#661100", "#6699CC", "#888888")
+
+DimPlot(se_brain_merged_notfilt, cols = coldef)
+```
+
+
+## Filtering step
+
+
+```{r 4}
+enids <- read.table(file = "/Users/solenefrapard/Documents/RRRM2_RR10_NASA_Project2/DataProcessing/RR3_test/rr3_ref/mm10_genes.tsv", header = T, stringsAsFactors = T)
+enids <- data.frame(apply(enids, 2, as.character), stringsAsFactors = F)
+rownames(enids) <- enids$gene_id
+
+```
+
+```{r}
+se_brain <- SubsetSTData(se_brain, expression = nFeature_RNA > 200)
+```
+
+
+### mitochondrial, ribosomal genes and Malat1 filtered out
+
+
+```{r}
+#| message: false
+#| echo: false
+#| include: false
+enids <- subset(enids, gene_biotype %in% c("protein_coding", "lncRNA"))
+keep.genes <- intersect(rownames(se_brain), enids$gene_name)
+se_brain <- se_brain[keep.genes, ]
+
+genes.brain <- grep(pattern = c("^mt-|^Rpl|^Rps|Malat1"), x = rownames(se_brain), value = T)
+#This is supposed to return all the mito, ribo and Malat1 genes
+keep.genes <- setdiff(rownames(se_brain), genes.brain)
+se_filtered <- se_brain[keep.genes, ]
+
+```
+
+```{r, fig.height=10, fig.width= 8}
+#| message: false
+#| echo: false
+#| include: false
+se_filtered$percent.mt <- PercentageFeatureSet(se_filtered, pattern = "^mt")
+se_filtered$percent.ribo <- PercentageFeatureSet(se_filtered, pattern = "^Rpl|^Rps")
+#PercentageFeatureSet: Calculate the percentage of all counts that belong to a given set of features
+VlnPlot(se_filtered, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"), ncol = 2, pt.size = 0)
+```
+
+
+### export Staffli object
+
+
+```{r}
+staffli <- se_filtered@tools$Staffli
+
+```
+
+```{r}
+#| message: false
+#| echo: false
+#| include: false
+# split the dataset into a list of objects -> one pre section
+se_section_list <- SplitObject(se_filtered, split.by = "section.name")
+
+
+# normalize and identify variable features for each dataset independently
+se_section_list <- lapply(se_section_list, SCTransform)
+
+
+# select features for integration
+features <- SelectIntegrationFeatures(object.list = se_section_list, nfeatures = 3000)
+
+se_section_list <- PrepSCTIntegration(object.list = se_section_list, anchor.features = features)
+```
+
+```{r}
+#| output: false
+se_brain_merged <- merge(se_section_list[[1]], y = c(se_section_list[2:length(se_section_list)]), merge.data = T)
+VariableFeatures(se_brain_merged) <- features
+
+```
+
+
+Plot data before and after harmony
+
+## PCA + Harmony
+
+### PCA
+
+
+```{r}
+#| output: false
+se_brain_merged <- RunPCA(se_brain_merged)
+se_brain_merged <- RunUMAP(se_brain_merged, dims = 1:35, reduction = "pca")
+```
+
+```{r}
+p3 <- DimPlot(se_brain_merged, group.by = "section.name")+ ggtitle("Plot of the filtered data before integration with Harmony")
+p4 <- DimPlot(se_brain_merged)
+
+p3|p4
+```
+
+```{r}
+#| output: false
+coldef <- c("#004A55","#0000FF", "#0031D4", "#00CBD4", "#006A21", "#799400","#FFD66A", "#D4C200", "#D6E279","#D4D6FF", "#D3AAFF", "#7500BF","#AA0084", "#FF9A94", "#FF8861","#D43938", "#946E55", "#7F1100", "#9B9A9A","#88CCEE","#CC6677", "#DDCC77", "#117733", "#332288", "#AA4499", "#44AA99", "#999933", "#882255", "#661100", "#6699CC", "#888888")
+
+DimPlot(se_brain_merged, cols = coldef)
+```
+
+
+### Harmony
+
+
+```{r}
+#| message: false
+#| echo: false
+#| include: false
+se_merged_harmony <- RunHarmony(se_brain_merged, group.by.vars = "section.name", reduction = "pca", assay.use = "SCT")
+```
+
+
+## Clustering
+
+
+```{r}
+#| message: false
+#| echo: false
+#| include: false
+se_merged_harmony <- FindNeighbors(se_merged_harmony, reduction = "harmony", dims = 1:35)
+se_merged_harmony <- FindClusters(se_merged_harmony, resolution = 0.5)
+se_merged_harmony <- RunUMAP(se_merged_harmony, dims = 1:35, reduction = "harmony")
+```
+
+```{r}
+p7 <- DimPlot(se_merged_harmony, group.by = "section.name")+ ggtitle("Plot of the filtered data after integration with Harmony")
+p8 <- DimPlot(se_merged_harmony)
+
+p7|p8
+```
+
+```{r}
+#| output: false
+coldef <- c("#004A55","#0000FF", "#0031D4", "#00CBD4", "#006A21", "#799400","#FFD66A", "#D4C200", "#D6E279","#D4D6FF", "#D3AAFF", "#7500BF","#AA0084", "#FF9A94", "#FF8861","#D43938", "#946E55", "#7F1100", "#9B9A9A","#88CCEE","#CC6677", "#DDCC77", "#117733", "#332288", "#AA4499", "#44AA99", "#999933", "#882255", "#661100", "#6699CC", "#888888")
+
+DimPlot(se_merged_harmony, cols = coldef)
+```
+
+```{r}
+se_merged_harmony@tools$Staffli <- staffli
+```
+
+```{r, fig.height= 22, fig.width= 24}
+ST.FeaturePlot(se_merged_harmony, features = "seurat_clusters", dark.theme = F, pt.size = 2.3, show.sb = F, ncol = 4, cols = coldef)
+```
+
+```{r}
+#| message: false
+#| echo: false
+#| include: false
+markers_RR10 <- FindAllMarkers(se_merged_harmony, assay = "RNA",
+                           only.pos = T)
+```
+
+```{r, fig.width=10, fig.height= 18}
+#top5_2 <- markers_RR10_2 %>%
+top5_2 <- markers_RR10 %>%
+  group_by(cluster) %>%
+  filter(p_val_adj < 0.01) %>%
+  filter(row_number() %in% 1:5)
+
+d2 <- DotPlot(se_merged_harmony, features = unique(top5_2$gene) %>% rev()) + 
+  coord_flip() + 
+  scale_colour_gradientn(colours = RColorBrewer::brewer.pal(n = 11, name = "RdBu") %>% rev()) + labs(y = "cluster")
+
+d2
+```
+
