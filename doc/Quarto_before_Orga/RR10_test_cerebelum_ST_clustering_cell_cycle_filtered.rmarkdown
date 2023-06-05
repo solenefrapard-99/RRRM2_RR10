@@ -11,7 +11,9 @@ format:
 date: '2023-02-23'
 ---
 
+
 ## Loading packages, creating seurat object
+
 
 ```{r setup}
 #| message: false
@@ -32,7 +34,9 @@ library(harmony)
 library(STutility)
 ```
 
+
 ### Set paths
+
 
 ```{r}
 # Set parent dir for visium experiments containing folders of spaceranger output with names
@@ -42,7 +46,9 @@ visium.dir <- "/Users/solenefrapard/Documents/RRRM2_RR10_NASA_Project2/DataProce
 export_path = "/Users/solenefrapard/Documents/RRRM2_RR10_NASA_Project2/DataProcessing/RRRM2_RR10_test/RR-10/out_cereb"
 ```
 
+
 ### Create infoTable and create Seurat object
+
 
 ```{r}
 samples <- list.files(visium.dir, recursive = TRUE, full.names = TRUE, pattern = 'filtered_feature_bc_matrix.h5')
@@ -68,9 +74,11 @@ se_brain <- InputFromTable(infotable = infoTable,
                   platform =  "Visium")
 ```
 
+
 # Data Quality Control
 
 ## Number of Genes per Spot
+
 
 ```{r}
 VlnPlot(se_brain, features = "nFeature_RNA", ncol = 1, group.by = "section.name", pt.size = 0)
@@ -81,25 +89,28 @@ ST.FeaturePlot(se_brain, features = "nFeature_RNA", dark.theme = F, cols = c("li
 
 ```
 
+
 ## Number of UMIs per Spot
+
 
 ```{r}
 VlnPlot(se_brain, features = "nCount_RNA", ncol = 1, group.by = "section.name", pt.size = 0)
 ```
+
 ```{r}
 #Plotting nCount_RNA vs mFeature_RNA to see how they correlate over the whole dataset. Good spots will have good ratio for both these parameters
 
 FeatureScatter(se_brain, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
 ```
 
-
-
 ```{r, fig.height= 10,fig.width= 10}
 ST.FeaturePlot(se_brain, features = "nCount_RNA", dark.theme = F, cols = c("lightyellow", "red", "dark red"), pt.size = 1.2, ncol = 4)
 
 ```
 
+
 ### VlnPlot - UMI/Genes/mtGenes/RiboGenes
+
 
 ```{r, fig.height=10, fig.width= 8}
 se_brain$percent.mt <- PercentageFeatureSet(se_brain, pattern = "^mt")
@@ -107,7 +118,9 @@ se_brain$percent.ribo <- PercentageFeatureSet(se_brain, pattern = "^Rpl|^Rps")
 VlnPlot(se_brain, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"), ncol = 2, pt.size = 0)
 ```
 
+
 Run PCA here on the non-filtered data and then plot it
+
 
 ```{r}
 #| message: false
@@ -127,7 +140,9 @@ features <- SelectIntegrationFeatures(object.list = se_section_list_notfilt, nfe
 se_section_list_notfilt <- PrepSCTIntegration(object.list = se_section_list_notfilt, anchor.features = features)
 ```
 
+
 ## Ploting of the non-filtered data
+
 
 ```{r}
 #| message: false
@@ -148,9 +163,7 @@ se_brain_merged_notfilt <- RunUMAP(se_brain_merged_notfilt, dims = 1:35, reducti
 
 ```{r}
 p1 <- DimPlot(se_brain_merged_notfilt, group.by = "section.name")+ ggtitle("Plot of the non-filtered data")
-p2 <- DimPlot(se_brain_merged_notfilt)
 
-p1|p2
 ```
 
 ```{r}
@@ -160,7 +173,9 @@ coldef <- c("#004A55","#0000FF", "#0031D4", "#00CBD4", "#006A21", "#799400","#FF
 DimPlot(se_brain_merged_notfilt, cols = coldef)
 ```
 
+
 ## Filtering step
+
 
 ```{r 4}
 enids <- read.table(file = "/Users/solenefrapard/Documents/RRRM2_RR10_NASA_Project2/DataProcessing/RR3_test/rr3_ref/mm10_genes.tsv", header = T, stringsAsFactors = T)
@@ -173,7 +188,9 @@ rownames(enids) <- enids$gene_id
 se_brain <- SubsetSTData(se_brain, expression = nFeature_RNA > 200)
 ```
 
+
 ### mitochondrial, ribosomal genes and Malat1 filtered out
+
 
 ```{r}
 #| message: false
@@ -200,7 +217,9 @@ se_filtered$percent.ribo <- PercentageFeatureSet(se_filtered, pattern = "^Rpl|^R
 VlnPlot(se_filtered, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"), ncol = 2, pt.size = 0)
 ```
 
+
 ### export Staffli object
+
 
 ```{r}
 staffli <- se_filtered@tools$Staffli
@@ -232,11 +251,13 @@ VariableFeatures(se_brain_merged) <- features
 
 ```
 
+
 Plot data before and after harmony
 
 ## PCA + Harmony
 
 ### PCA
+
 
 ```{r}
 #| output: false
@@ -258,9 +279,7 @@ ElbowPlot(se_brain_merged)
 
 ```{r}
 p3 <- DimPlot(se_brain_merged, group.by = "section.name")+ ggtitle("Plot of the filtered data before integration with Harmony")
-p4 <- DimPlot(se_brain_merged)
 
-p3|p4
 ```
 
 ```{r}
@@ -270,7 +289,9 @@ coldef <- c("#004A55","#0000FF", "#0031D4", "#00CBD4", "#006A21", "#799400","#FF
 DimPlot(se_brain_merged, cols = coldef)
 ```
 
+
 ### Harmony
+
 
 ```{r}
 #| message: false
@@ -279,7 +300,9 @@ DimPlot(se_brain_merged, cols = coldef)
 se_merged_harmony <- RunHarmony(se_brain_merged, group.by.vars = "section.name", reduction = "pca", assay.use = "SCT")
 ```
 
+
 ## Clustering
+
 
 ```{r}
 #| message: false
@@ -333,3 +356,4 @@ d2 <- DotPlot(se_merged_harmony, features = unique(top5_2$gene) %>% rev()) +
 
 d2
 ```
+
