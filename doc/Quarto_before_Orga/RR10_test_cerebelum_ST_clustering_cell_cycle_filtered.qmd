@@ -1,5 +1,6 @@
 ---
 title: "RR10_test_cerebelum_ST_clustering"
+author: "Solène Frapard"
 output: html_document
 format: 
   html:
@@ -8,7 +9,7 @@ format:
     number-sections: true
     theme: spacelab
     embed-resources: true
-date: '2023-02-23'
+date: '2023-06-08'
 ---
 Last change on the 2023-05-31--> trying out different clustering conditions
 ## Loading packages, creating seurat object
